@@ -15,7 +15,7 @@ import java.util.Optional;
 
 @Data
 @Service
-public class UserServiceImpl {
+public class UserService {
     @Autowired
     private final UserRepository userRepository;
 

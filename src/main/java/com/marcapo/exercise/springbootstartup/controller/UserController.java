@@ -1,9 +1,10 @@
 package com.marcapo.exercise.springbootstartup.controller;
 
 import com.marcapo.exercise.springbootstartup.model.User;
-import com.marcapo.exercise.springbootstartup.service.UserServiceImpl;
+import com.marcapo.exercise.springbootstartup.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 
@@ -14,19 +15,20 @@ import java.util.Optional;
 @RequestMapping("/users")
 public class UserController {
     @Autowired
-    private UserServiceImpl userService;
+    private UserService userService;
 
-    @PostMapping(consumes = "application/octet-stream")
+    @PostMapping(value = "", consumes = {MediaType.APPLICATION_OCTET_STREAM_VALUE, MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<Object> createUser(@RequestBody User user) {
         Optional<User> searchedUser = userService.findByUsername(user.getUsername());
-        if(searchedUser.isEmpty()){
-            return ResponseEntity.ok(userService.createUser(user));
-        }else{
+        if(searchedUser.isPresent()){
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Dieser Nutzer existiert bereits");
+        }else{
+            User createdUser = userService.createUser(user);
+            return ResponseEntity.ok(createdUser);
         }
     }
 
-    @PutMapping(value = "/{username}", consumes = "application/octet-stream")
+    @PutMapping(value = "/{username}", consumes = {MediaType.APPLICATION_OCTET_STREAM_VALUE, MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<Object> updateUser(@PathVariable String username, @RequestBody User user) {
         Optional<User> searchedUser = userService.findByUsername(username);
         if(searchedUser.isPresent()){
@@ -47,24 +49,29 @@ public class UserController {
         }
     }
 
-    @GetMapping(consumes = "application/octet-stream")
+    @GetMapping(value = "", consumes = {MediaType.APPLICATION_OCTET_STREAM_VALUE, MediaType.APPLICATION_JSON_VALUE})
     public List<User> getAllUsers() {
         return userService.getAllUsers();
     }
 
-    @GetMapping(value = "/search/findByUsername/{username}", consumes = "application/octet-stream")
+    @GetMapping(value = "/search/findByUsername/{username}", consumes = {MediaType.APPLICATION_OCTET_STREAM_VALUE, MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<Object> findByUsername(@PathVariable("username") String username) {
         Optional<User> searchedUser = userService.findByUsername(username);
         if(searchedUser.isPresent()){
-            return ResponseEntity.ok(searchedUser);
+            return ResponseEntity.status(HttpStatus.FOUND).body(searchedUser.get());
         }else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nutzer wurde nicht gefunden");
         }
     }
 
-    @GetMapping(value = "/search/deleteByUsername/{username}", consumes = "application/octet-stream")
+    @GetMapping(value = "/search/deleteByUsername/{username}", consumes = {MediaType.APPLICATION_OCTET_STREAM_VALUE, MediaType.APPLICATION_JSON_VALUE})
     ResponseEntity<Object> deleteByUsername(@PathVariable("username") String username) {
-        userService.deleteByUsername(username);
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body("Gelöschter Nutzer: "+ username);
+        Optional<User> searchedUser = userService.findByUsername(username);
+        if(searchedUser.isPresent()){
+            userService.deleteByUsername(username);
+            return ResponseEntity.ok("Gelöschter Nutzer: "+ username);
+        }else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nutzer wurde nicht gefunden");
+        }
     }
 }
