@@ -21,3 +21,6 @@ Befehl zum Ausführen der Tests:
 
 Vorausetzungen:
 - java 11
+
+Learn
+- Replace mongoo with SQL
